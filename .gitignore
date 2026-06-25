@@ -1,0 +1,37 @@
+# --- Secrets: NEVER commit ---
+secrets.json
+.env
+.env.*
+*.token
+*token*.txt
+
+# --- Real receipt data & analytics output: private, NEVER commit ---
+# (the only receipt data in the repo is examples/sample_receipt.json, which is synthetic)
+data/
+purchases_*.csv
+category_map.json
+output/
+*.png
+*.svg
+*.html
+# but DO keep example/demo assets that are built from synthetic data:
+!examples/
+!examples/**
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+build/
+dist/
+
+# --- Editor / OS ---
+.vscode/
+.idea/
+.DS_Store

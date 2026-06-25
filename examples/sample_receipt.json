@@ -1,0 +1,61 @@
+{
+  "result": {
+    "receiptDetails": {
+      "items": [
+        {
+          "description": "EXAMPLE SEEDED BREAD",
+          "quantity": 1,
+          "price": 100,
+          "amount": 100,
+          "rewards": []
+        },
+        {
+          "description": "DEMO WHOLE MILK",
+          "quantity": 2,
+          "price": 150,
+          "amount": 300,
+          "rewards": []
+        },
+        {
+          "description": "SAMPLE CHICKEN FILLET",
+          "quantity": 1,
+          "price": 500,
+          "amount": 500,
+          "rewards": []
+        },
+        {
+          "description": "FAKE LOOSE APPLES",
+          "quantity": 0.5,
+          "price": 200,
+          "amount": 100,
+          "rewards": []
+        },
+        {
+          "description": "PLACEHOLDER BEER 4PK",
+          "quantity": 1,
+          "price": 600,
+          "amount": 600,
+          "rewards": [
+            {
+              "campaignName": "Demo Offer",
+              "rewardType": "store",
+              "value": 100
+            }
+          ]
+        }
+      ],
+      "subtotal": 1600,
+      "savingsTotal": 100,
+      "savings": {
+        "storeSavings": {
+          "total": 100
+        },
+        "moreCardSavings": {
+          "total": 0
+        },
+        "couponsStampsDiscounts": []
+      },
+      "balancePaid": 1500
+    }
+  }
+}
