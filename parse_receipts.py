@@ -76,20 +76,20 @@ def _reconcile(receipt_details: dict[str, Any], item_rows: list[dict]) -> Reconc
     if subtotal is not None and gross_sum != subtotal:
         msgs.append(f"gross sum {gross_sum} != subtotal {subtotal} (diff {gross_sum - subtotal})")
 
-    # Check 2: item-level discounts sum to the store-savings total.
-    if store_savings is not None and discount_sum != store_savings:
-        msgs.append(f"item discounts {discount_sum} != storeSavings {store_savings} "
-                    f"(diff {discount_sum - store_savings})")
+    # Check 2: item-level discounts sum to store + More Card savings.
+    # Real receipts show More Card rewards ARE in each item's rewards list (the parser
+    # sums them all regardless of rewardType), so we compare against the combined total.
+    combined_savings = store_savings + morecard_savings
+    if discount_sum != combined_savings:
+        msgs.append(f"item discounts {discount_sum} != storeSavings+moreCardSavings "
+                    f"{combined_savings} (diff {discount_sum - combined_savings})")
 
     # Check 3: the receipt's own arithmetic holds.
     if None not in (subtotal, savings_total, balance_paid):
         if subtotal - savings_total != balance_paid:
             msgs.append(f"subtotal {subtotal} - savings {savings_total} != balancePaid {balance_paid}")
 
-    # Informational: receipt-level discounts we don't apportion to lines.
-    if morecard_savings:
-        msgs.append(f"NOTE: receipt has More Card savings of {morecard_savings}p not "
-                    f"attributed to line items; per-line net overstates actual paid")
+    # Coupon/stamp discounts are receipt-level and NOT in item rewards — flag if present.
     if coupon_savings:
         msgs.append(f"NOTE: receipt has coupon/stamp discounts not attributed to line items")
 

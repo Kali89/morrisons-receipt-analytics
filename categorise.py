@@ -47,40 +47,126 @@ import pandas as pd
 # below is how you find what's still missing.
 
 RULES: list[tuple[str, list[str]]] = [
-    # alcohol first: a "WINE GUMS" style false positive is why we use word
-    # boundaries below, but keep an eye on edge cases like "GINGER".
+    # alcohol first — keep word boundaries tight to avoid "WINE GUMS" etc.
     ("alcohol", [r"\bwine\b", r"\bbeer\b", r"lager", r"\bgin\b", r"vodka",
                  r"whisky", r"whiskey", r"\brum\b", r"cider", r"\bale\b",
                  r"prosecco", r"champagne", r"\bipa\b", r"brandy", r"tequila",
-                 r"liqueur", r"shiraz", r"merlot", r"malbec", r"rioja"]),
+                 r"liqueur", r"shiraz", r"merlot", r"malbec", r"rioja",
+                 r"stout", r"bitter", r"porter", r"pale\s?ale", r"pilsner",
+                 # grape varieties / styles found in real baskets
+                 r"primitivo", r"ros[eé]", r"\brouge\b", r"pinot", r"grigio",
+                 # UK brewery / brand names
+                 r"doom\s?bar", r"ghost\s?ship", r"theakston", r"marston",
+                 r"daleside", r"black\s?sheep", r"white\s?rat",
+                 r"sharps?\b", r"sharp'?s", r"rocky\s?mountain",
+                 # catch generic "4PK", "6PK" beer packs not otherwise matched
+                 r"\d+\s?pk\b"]),
 
-    ("milk",    [r"\bmilk\b", r"s/skim", r"semi skim", r"skimmed", r"whole milk"]),
+    ("milk",    [r"\bmilk\b", r"s/skim", r"semi.?skim", r"skimmed",
+                 r"whole milk", r"oat\s?milk", r"soy\s?milk"]),
 
-    ("fish",    [r"tuna", r"salmon", r"\bcod\b", r"haddock", r"prawn", r"fish",
-                 r"mackerel", r"sardine", r"\bsea\s?bass\b", r"scampi"]),
+    # household before fish/dairy so "FAIRY WASHING" → household not dairy
+    ("household", [r"washing.up", r"washing liquid", r"washing gel",
+                   r"fairy\b", r"non.?bio", r"vanish", r"firelighter",
+                   r"bar.?be.?quick",           # BBQ fuel
+                   r"cling.?film", r"\bfoil\b", r"garden twine",
+                   r"andrex", r"kleenex", r"tissue", r"kitchen.?roll",
+                   r"\bnappies?\b", r"baby.?wipe", r"cotton.?pad",
+                   r"cot/wool", r"nutmeg\b",   # Morrisons' own baby/home brand
+                   r"colgate", r"toothpaste", r"toothbrush", r"oral.?b",
+                   r"lynx\b", r"nivea", r"shower.?gel", r"deodorant",
+                   r"durex", r"condom", r"lubricant",
+                   r"paracetamol", r"ibuprofen", r"hayfever",
+                   r"regina\b", r"blitz\b",    # kitchen paper brands
+                   r"\brf\s?powr\b"]),          # RF Power deodorant/body spray
+
+    ("fish",    [r"tuna", r"salmon", r"\bcod\b", r"haddock", r"prawn",
+                 r"\bfish\b", r"mackerel", r"sardine", r"\bsea\s?bass\b",
+                 r"scampi", r"seafood", r"f/finger", r"fish.?finger",
+                 r"whitefish"]),
 
     ("meat",    [r"chicken", r"\bbeef\b", r"\bpork\b", r"\bham\b", r"bacon",
                  r"sausage", r"\bmince\b", r"steak", r"kidney", r"\blamb\b",
                  r"turkey", r"gammon", r"chorizo", r"salami", r"pepperoni",
-                 r"meatball", r"\bpie\b"]),   # NB: "PIE" is a heuristic; a fruit
-                                              # pie would land here — review.
+                 r"meatball", r"\bpie\b", r"hot.?dog", r"black.?pud",
+                 r"blk.?pud", r"ye\s?olde\s?oak"]),
 
     ("dairy",   [r"yogurt", r"yoghurt", r"cheese", r"butter", r"\beggs?\b",
-                 r"cream", r"quiche"]),
+                 r"\bcream\b", r"quiche",
+                 # cheese varieties / brands
+                 r"cheddar", r"mozzarella", r"mzza", r"feta", r"brie",
+                 r"stilton", r"gouda", r"edam", r"pecorino", r"parmesan",
+                 r"parmigiano", r"grana\s?padano", r"ricotta", r"halloumi",
+                 r"cathedral", r"pilgrims?\s?choice", r"pilg/choice",
+                 r"seriously\s?spreadable", r"philadelphia",
+                 r"galbani", r"kerrygold", r"elmlea", r"spreadable",
+                 r"tzatziki", r"cheesy.?slice",
+                 # drinks
+                 r"\bfrijj\b", r"benecol", r"cholesterol.?drink"]),
 
-    ("bakery",  [r"bread", r"naan", r"bagel", r"doughnut", r"roll", r"croissant",
-                 r"crumpet", r"muffin", r"baguette"]),
+    ("bakery",  [r"bread", r"naan", r"bagel", r"doughnut", r"rolls?\b",
+                 r"croissant", r"crumpet", r"muffin", r"baguette",
+                 r"pitta", r"\bbap\b", r"\bbaps\b", r"bloomer", r"loaf",
+                 r"split.?tin", r"coburg", r"malties", r"farmhouse",
+                 r"hovis\b", r"\bwraps?\b", r"tortilla", r"mission\b",
+                 r"deli\s?kitchen", r"sub.?roll", r"\bsub\b"]),
 
     ("produce", [r"banana", r"apple", r"onion", r"potato", r"broccoli",
                  r"mushroom", r"melon", r"cabbage", r"carrot", r"tomato",
-                 r"pepper", r"lettuce", r"cucumber", r"berry", r"grape",
-                 r"orange", r"lemon", r"lime", r"avocado", r"spinach"]),
+                 r"pepper", r"lettuce", r"cucumber", r"\bberry\b", r"berries",
+                 r"grape", r"orange", r"lemon", r"lime", r"avocado",
+                 r"spinach", r"strawberr", r"blueberr", r"raspberr",
+                 r"blackberr", r"cherry", r"cherries", r"apricot",
+                 r"nectarine", r"mango", r"celery", r"leek", r"swede",
+                 r"baby.?corn", r"sweetcorn", r"sweetclem", r"clementine",
+                 r"satsuma", r"courgette", r"parsnip", r"broccoli",
+                 r"cauliflower", r"garlic", r"ginger", r"\bherb\b", r"basil",
+                 r"chive", r"coriander"]),
 
     ("pasta_rice", [r"pasta", r"rigatoni", r"manfredine", r"spaghetti",
-                    r"penne", r"\brice\b", r"noodle", r"lasagne", r"macaroni"]),
+                    r"penne", r"\brice\b", r"noodle", r"lasagne", r"lasgane",
+                    r"macaroni", r"fusilli", r"tortell", r"cous.?cous",
+                    r"orzo", r"gnocchi"]),
 
-    ("drinks_soft", [r"juice", r"\bcola\b", r"lemonade", r"squash", r"\bwater\b",
-                     r"\btea\b", r"coffee", r"smoothie"]),
+    ("frozen",  [r"mccain", r"hash.?brown", r"pizza\b", r"goodfella",
+                 r"ristorante", r"chicago.?town", r"chicage.?town",
+                 r"ice.?cr[ée]m", r"\bcones?\b", r"ice.?loll",
+                 r"carte.?d.?or", r"lollies", r"lolly",
+                 r"chunky.?chips", r"straight.?cut.?chips"]),
+
+    ("snacks",  [r"doritos", r"belvita", r"mcvitie", r"wispa", r"\bcrisp",
+                 r"nachip", r"nachos", r"popcorn", r"pretzel",
+                 r"chocolate.?bar", r"choc.?bar", r"flapjack",
+                 r"bourbon\b", r"choco.?hoop", r"choco.?nut",
+                 r"churros", r"\bdips?\b"]),
+
+    ("drinks_soft", [r"juice", r"\bcola\b", r"lemonade", r"squash",
+                     r"\bwater\b", r"\btea\b", r"coffee", r"smoothie",
+                     r"starbuck", r"frappuccino", r"tropicana", r"trop\b"]),
+
+    ("cupboard", [r"beans", r"baked.?beans", r"tinned", r"canned",
+                  r"chopped.?tom", r"mutti\b", r"polpa",
+                  r"stock.?cube", r"\boxo\b", r"batchelor",
+                  r"branston", r"ambrosia", r"custard",
+                  r"honey", r"jam\b", r"spread\b", r"marmalade",
+                  r"peanut.?butter", r"marmite",
+                  r"oats?\b", r"porridge", r"muesli", r"cereal",
+                  r"corn.?flakes", r"shredd", r"wheat.?biscuit",
+                  r"sugar\b", r"flour\b",
+                  r"oil\b", r"olive.?oil", r"sunflower.?oil",
+                  r"vinegar", r"lentil", r"black.?bean", r"chickpea",
+                  r"pesto", r"cooking.?sauce", r"bbq.?sauce",
+                  r"mango.?chut", r"mint.?sauce", r"stir.?fry",
+                  r"blue.?dragon", r"sharwood", r"patak",
+                  r"\bsauce\b", r"\bspice\b", r"paprika", r"cumin",
+                  r"masala", r"oregano", r"seasoning",
+                  r"couscous", r"cous\s?cous",
+                  r"olives?\b", r"kalamata", r"gaea\b",
+                  r"chilli\b", r"chili\b",
+                  r"curry\b", r"korma", r"tikka", r"keralan",
+                  r"ravioli",                   # filled pasta, caught here not pasta_rice
+                  r"mushy.?peas", r"coleslaw",
+                  r"scioattolo", r"girasole"]),  # Italian store-cupboard
 ]
 
 UNCLASSIFIED = "unclassified"
