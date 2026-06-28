@@ -17,9 +17,7 @@ Path("output").mkdir(exist_ok=True)
 
 df = pd.read_csv("purchases_2026.csv", parse_dates=["date"])
 
-# Exclude June for "typical week" figures (June was an anomaly — 6 shops,
-# big household restock, three wine offers). Keeps Feb–May as the baseline.
-df_norm = df[df["date"].dt.month < 6]
+df_norm = df
 norm_weeks = (df_norm["date"].max() - df_norm["date"].min()).days / 7
 
 # ── Palette ────────────────────────────────────────────────────────────────
@@ -96,7 +94,7 @@ fig.suptitle(
     "Household Morrisons spend — where the money goes",
     fontsize=16, fontweight="bold", y=1.01, color="#222222"
 )
-fig.text(0.5, 0.97, "Average week, Feb–May 2026  ·  £82/wk household total  (June excluded — 8 shops, atypically high)",
+fig.text(0.5, 0.97, "Average week, Feb–Jun 2026  ·  £87/wk household total  ·  39 shops across both More Card accounts",
          ha="center", fontsize=10, color="#666666")
 
 # — Pie —
@@ -148,9 +146,19 @@ ax_bar.spines[["top", "right", "left"]].set_visible(False)
 ax_bar.tick_params(left=False)
 ax_bar.grid(axis="x", alpha=0.3, linestyle="--")
 
-for bar, val in zip(bars, vals):
+for bar, val, cat in zip(bars, vals, cat_order):
     ax_bar.text(val + 0.15, bar.get_y() + bar.get_height() / 2,
-                f"£{val:.2f}", va="center", fontsize=8.5, color="#444444")
+                f"£{val:.2f}", va="center", fontsize=8.5,
+                color="#444444",
+                fontweight="bold" if cat == "dairy" else "normal")
+# Callout for dairy — the top single category
+dairy_y = cat_order.index("dairy") if "dairy" in cat_order else None
+if dairy_y is not None:
+    ax_bar.annotate("  ← #1 category",
+                    xy=(cat_pw.get("dairy", 0), dairy_y),
+                    xytext=(cat_pw.get("dairy", 0) * 0.55, dairy_y - 0.55),
+                    fontsize=8, color="#4C72B0", fontstyle="italic",
+                    arrowprops=dict(arrowstyle="-", color="#4C72B0", lw=0.8))
 
 # Group dividers
 pos = 0
@@ -220,7 +228,7 @@ ax.legend(loc="upper left", fontsize=9, framealpha=0, ncol=3)
 ax.set_title("Household monthly Morrisons spend by category  (Feb–Jun 2026)",
              fontsize=14, fontweight="bold", pad=14, color="#222222")
 fig.text(0.5, -0.02,
-         "June unusually high: 8 shops combined vs 5–7 in other months, including a big household restock and several wine offers",
+         "April (11 shops) and June (8 shops, big household restock + wine offers) were the busiest months",
          ha="center", fontsize=9, color="#888888", style="italic")
 
 plt.tight_layout()
@@ -245,7 +253,7 @@ for ax in axes:
 
 fig.suptitle("How often does the household buy each type of thing?",
              fontsize=16, fontweight="bold", y=1.02, color="#222222")
-fig.text(0.5, 0.97, "Left: weekly spend share by purchase frequency  ·  Right: how often each category appears in a shop  (39 shops)",
+fig.text(0.5, 0.97, "Left: weekly spend share by purchase frequency  ·  Right: how often each category appears in a shop  (39 shops, Feb–Jun 2026)",
          ha="center", fontsize=10, color="#666666")
 
 # — Donut pie —
