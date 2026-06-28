@@ -72,6 +72,7 @@ RULES: list[tuple[str, list[str]]] = [
                    r"cling.?film", r"\bfoil\b", r"garden twine",
                    r"andrex", r"kleenex", r"tissue", r"kitchen.?roll",
                    r"\bnappies?\b", r"baby.?wipe", r"cotton.?pad",
+                   r"calpol",
                    r"cot/wool", r"nutmeg\b",   # Morrisons' own baby/home brand
                    r"colgate", r"toothpaste", r"toothbrush", r"oral.?b",
                    r"lynx\b", r"nivea", r"shower.?gel", r"deodorant",
@@ -92,6 +93,10 @@ RULES: list[tuple[str, list[str]]] = [
     # Early exit: filled pasta before meat rules catch the protein filling.
     # "M CHICKEN TORTELLONI" should be pasta_rice, not meat.
     ("pasta_rice", [r"tortell", r"ravioli", r"cannelloni"]),
+
+    # Early exit: specific snacks before bakery catches tortilla/tea words.
+    ("snacks", [r"tortilla.?chip",  # crisps, not wraps — before tortilla in bakery
+                r"tea.?cake"]),     # Tunnock's etc., before \btea\b in drinks_soft
 
     ("meat",    [r"chicken", r"\bchk\b",   # CHK = chicken (Morrisons abbreviation)
                  r"\bbeef\b", r"\bpork\b", r"\bham\b", r"bacon",
@@ -133,7 +138,8 @@ RULES: list[tuple[str, list[str]]] = [
                  r"corn.?flakes", r"bran.?flakes", r"frosties",
                  r"wheat.?biscuit",                    # Weetabix-shape biscuits
                  r"\bshredd\b",                        # SHREDD WHEAT abbreviated
-                 r"\bcereals?\b"]),
+                 r"\bcereals?\b",
+                 r"choco.?hoop"]),                     # chocolate cereal rings
 
     # Early exits: items whose ingredient names would otherwise be caught by the
     # broad 'produce' rules below.  Must sit BEFORE the produce block.
@@ -147,6 +153,8 @@ RULES: list[tuple[str, list[str]]] = [
                  r"mushroom", r"melon", r"cabbage", r"carrot", r"tomato",
                  r"pepper", r"lettuce", r"cucumber", r"\bberry\b", r"berries",
                  r"grape", r"orange", r"lemon", r"lime", r"avocado",
+                 r"green.?bean", r"runner.?bean", r"french.?bean",
+                 r"broad.?bean",                      # fresh beans before 'beans' in cupboard
                  r"spinach", r"strawberr", r"blueberr", r"raspberr",
                  r"blackberr", r"cherry", r"cherries", r"apricot",
                  r"nectarine", r"mango", r"celery", r"leek", r"swede",
@@ -185,9 +193,11 @@ RULES: list[tuple[str, list[str]]] = [
                  r"\bcookie", r"\bmaryland\b", r"maynard",
                  r"party.ring", r"\blotus\b", r"\bkipling\b", r"bakewell",
                  # snack packs / nuts / raisins
-                 r"raisin", r"\bnuts?\b"]),
+                 r"raisin", r"\bnuts?\b",
+                 r"squashies"]),                       # Swizzels Squashies sweets
 
-    ("drinks_soft", [r"juice", r"\bcola\b", r"lemonade", r"squash",
+    ("drinks_soft", [r"juice", r"\bcola\b", r"lemonade",
+                     r"fruit.?squash|no.?added.?sugar.?squash",  # squash drink not veg
                      r"(still|sparkling|mineral|spring|pure)[\s-]?water",
                      r"\btea\b", r"coffee", r"smoothie",
                      r"starbuck", r"frappuccino", r"tropicana", r"trop\b"]),
