@@ -3,10 +3,16 @@ Tests for fetch_receipts.py — pure functions only, no network calls.
 """
 
 import datetime as dt
+import json
 
 import pytest
 
-from fetch_receipts import date_from_receipt_id, _extract_receipt_ids
+from fetch_receipts import (
+    date_from_receipt_id,
+    _extract_receipt_ids,
+    load_all_accounts,
+    load_credentials,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -98,3 +104,105 @@ class TestExtractReceiptIds:
         # they need to look exactly like a receipt ID. We test the key path.)
         obj = {"data": [{"receiptId": "99-99-2026-04-20"}]}
         assert _extract_receipt_ids(obj) == ["99-99-2026-04-20"]
+
+
+# ---------------------------------------------------------------------------
+# load_all_accounts / load_credentials
+# ---------------------------------------------------------------------------
+
+class TestLoadAllAccounts:
+    def test_legacy_single_account_format(self, tmp_path):
+        """Old flat format returns {'default': Credentials}."""
+        s = tmp_path / "secrets.json"
+        s.write_text(json.dumps({
+            "firebase_token": "fire", "auth0_token": "auth", "device_id": "dev"
+        }))
+        result = load_all_accounts(s)
+        assert list(result.keys()) == ["default"]
+        assert result["default"].firebase_token == "fire"
+        assert result["default"].auth0_token == "auth"
+        assert result["default"].device_id == "dev"
+
+    def test_multi_account_format(self, tmp_path):
+        """Multi-account format returns all named accounts."""
+        s = tmp_path / "secrets.json"
+        s.write_text(json.dumps({
+            "matt": {"firebase_token": "fm", "auth0_token": "am", "device_id": "dm"},
+            "wife": {"firebase_token": "fw", "auth0_token": "aw", "device_id": "dw"},
+        }))
+        result = load_all_accounts(s)
+        assert set(result.keys()) == {"matt", "wife"}
+        assert result["matt"].firebase_token == "fm"
+        assert result["wife"].device_id == "dw"
+
+    def test_skips_comment_keys(self, tmp_path):
+        """Keys starting with _ are ignored."""
+        s = tmp_path / "secrets.json"
+        s.write_text(json.dumps({
+            "_comment": "ignored",
+            "matt": {"firebase_token": "f", "auth0_token": "a", "device_id": "d"},
+        }))
+        result = load_all_accounts(s)
+        assert "_comment" not in result
+        assert "matt" in result
+
+    def test_missing_file_raises(self, tmp_path):
+        with pytest.raises(RuntimeError, match="No secrets file"):
+            load_all_accounts(tmp_path / "nonexistent.json")
+
+    def test_missing_field_raises(self, tmp_path):
+        """An account entry missing a required field raises a clear error."""
+        s = tmp_path / "secrets.json"
+        s.write_text(json.dumps({
+            "matt": {"firebase_token": "f", "auth0_token": "a"}  # missing device_id
+        }))
+        with pytest.raises(RuntimeError, match="device_id"):
+            load_all_accounts(s)
+
+
+class TestLoadCredentials:
+    def test_named_account_selection(self, tmp_path):
+        """account= kwarg picks the right entry from a multi-account file."""
+        s = tmp_path / "secrets.json"
+        s.write_text(json.dumps({
+            "matt": {"firebase_token": "fm", "auth0_token": "am", "device_id": "dm"},
+            "wife": {"firebase_token": "fw", "auth0_token": "aw", "device_id": "dw"},
+        }))
+        creds = load_credentials(s, account="wife")
+        assert creds.firebase_token == "fw"
+
+    def test_raises_on_unknown_account(self, tmp_path):
+        s = tmp_path / "secrets.json"
+        s.write_text(json.dumps({
+            "matt": {"firebase_token": "f", "auth0_token": "a", "device_id": "d"},
+        }))
+        with pytest.raises(RuntimeError, match="'other'"):
+            load_credentials(s, account="other")
+
+    def test_raises_when_multiple_accounts_no_selection(self, tmp_path):
+        """Ambiguous multi-account file without account= must raise."""
+        s = tmp_path / "secrets.json"
+        s.write_text(json.dumps({
+            "matt": {"firebase_token": "f", "auth0_token": "a", "device_id": "d"},
+            "wife": {"firebase_token": "f", "auth0_token": "a", "device_id": "d"},
+        }))
+        with pytest.raises(RuntimeError, match="multiple accounts"):
+            load_credentials(s)
+
+    def test_auto_selects_single_account(self, tmp_path):
+        """If only one account exists, account= is optional."""
+        s = tmp_path / "secrets.json"
+        s.write_text(json.dumps({
+            "solo": {"firebase_token": "f", "auth0_token": "a", "device_id": "d"},
+        }))
+        creds = load_credentials(s)
+        assert creds.firebase_token == "f"
+
+    def test_legacy_format_auto_selects(self, tmp_path):
+        """Old flat format works without account=."""
+        s = tmp_path / "secrets.json"
+        s.write_text(json.dumps({
+            "firebase_token": "f", "auth0_token": "a", "device_id": "d"
+        }))
+        creds = load_credentials(s)
+        assert creds.device_id == "d"

@@ -69,27 +69,98 @@ class Credentials:
     device_id: str
 
 
-def load_credentials(secrets_path: str | Path = "secrets.json") -> Credentials:
-    """Load tokens from env vars, falling back to a local secrets.json.
+def load_all_accounts(
+    secrets_path: str | Path = "secrets.json",
+) -> dict[str, "Credentials"]:
+    """Return {account_name: Credentials} for every account in secrets.json.
 
-    Env vars: MORRISONS_FIREBASE_TOKEN, MORRISONS_AUTH0_TOKEN, MORRISONS_DEVICE_ID
-    secrets.json: {"firebase_token": "...", "auth0_token": "...", "device_id": "..."}
+    Handles both the legacy single-account format and the new multi-account format:
+
+      Legacy:        {"firebase_token": "...", "auth0_token": "...", "device_id": "..."}
+                     → {"default": Credentials(...)}
+
+      Multi-account: {"matt": {"firebase_token": "...", ...}, "wife": {...}}
+                     → {"matt": Credentials(...), "wife": Credentials(...)}
+
+    Keys that start with "_" (like "_comment") are silently skipped.
     """
+    p = Path(secrets_path)
+    if not p.exists():
+        raise RuntimeError(
+            f"No secrets file found at {p}. "
+            "Copy secrets.example.json → secrets.json and fill in your tokens. "
+            "See the module docstring for how to capture fresh tokens."
+        )
+    d = json.loads(p.read_text())
+
+    # Legacy single-account: top-level keys are credential field names.
+    if all(k in d for k in ("firebase_token", "auth0_token", "device_id")):
+        return {"default": Credentials(d["firebase_token"], d["auth0_token"], d["device_id"])}
+
+    # Multi-account: top-level keys are account names.
+    accounts: dict[str, Credentials] = {}
+    for name, acct in d.items():
+        if name.startswith("_") or not isinstance(acct, dict):
+            continue
+        try:
+            accounts[name] = Credentials(
+                acct["firebase_token"], acct["auth0_token"], acct["device_id"]
+            )
+        except KeyError as e:
+            raise RuntimeError(
+                f"Account '{name}' in {secrets_path} is missing field {e}. "
+                "Each account needs firebase_token, auth0_token, and device_id."
+            ) from e
+
+    if not accounts:
+        raise RuntimeError(
+            f"No valid accounts found in {secrets_path}. "
+            "See secrets.example.json for the expected format."
+        )
+    return accounts
+
+
+def load_credentials(
+    secrets_path: str | Path = "secrets.json",
+    account: str | None = None,
+) -> Credentials:
+    """Load tokens for one account from env vars or secrets.json.
+
+    Env vars (single-account shortcut — useful for CI):
+        MORRISONS_FIREBASE_TOKEN, MORRISONS_AUTH0_TOKEN, MORRISONS_DEVICE_ID
+
+    secrets.json — legacy single-account:
+        {"firebase_token": "...", "auth0_token": "...", "device_id": "..."}
+
+    secrets.json — multi-account (new default):
+        {"matt": {"firebase_token": "...", ...}, "wife": {"firebase_token": "...", ...}}
+
+    When using multi-account format, pass account="matt" to choose which account.
+    If there is only one account in the file, it is selected automatically.
+    """
+    # Env vars take priority (useful for CI / one-off scripting).
     env = (os.getenv("MORRISONS_FIREBASE_TOKEN"),
            os.getenv("MORRISONS_AUTH0_TOKEN"),
            os.getenv("MORRISONS_DEVICE_ID"))
     if all(env):
         return Credentials(*env)  # type: ignore[arg-type]
 
-    p = Path(secrets_path)
-    if p.exists():
-        d = json.loads(p.read_text())
-        return Credentials(d["firebase_token"], d["auth0_token"], d["device_id"])
+    all_accts = load_all_accounts(secrets_path)
+
+    if account is not None:
+        if account not in all_accts:
+            raise RuntimeError(
+                f"Account '{account}' not found in {secrets_path}. "
+                f"Available accounts: {sorted(all_accts)}"
+            )
+        return all_accts[account]
+
+    if len(all_accts) == 1:
+        return next(iter(all_accts.values()))
 
     raise RuntimeError(
-        "No credentials found. Set MORRISONS_FIREBASE_TOKEN / MORRISONS_AUTH0_TOKEN "
-        "/ MORRISONS_DEVICE_ID, or create secrets.json. See the module docstring "
-        "for how to capture fresh tokens."
+        f"secrets.json has multiple accounts ({sorted(all_accts)}). "
+        "Specify one: load_credentials(account='matt') or use load_all_accounts()."
     )
 
 
