@@ -89,9 +89,13 @@ RULES: list[tuple[str, list[str]]] = [
                  r"scampi", r"seafood", r"f/finger", r"fish.?finger",
                  r"whitefish"]),
 
+    # Early exit: filled pasta before meat rules catch the protein filling.
+    # "M CHICKEN TORTELLONI" should be pasta_rice, not meat.
+    ("pasta_rice", [r"tortell", r"ravioli", r"cannelloni"]),
+
     ("meat",    [r"chicken", r"\bchk\b",   # CHK = chicken (Morrisons abbreviation)
                  r"\bbeef\b", r"\bpork\b", r"\bham\b", r"bacon",
-                 r"sausage", r"\bmince\b", r"steak", r"kidney", r"\blamb\b",
+                 r"sausage", r"\bmince\b", r"steak", r"\blamb\b",
                  r"turkey", r"gammon", r"chorizo", r"salami", r"pepperoni",
                  r"meatball", r"\bpie\b", r"hot.?dog", r"black.?pud",
                  r"blk.?pud", r"ye\s?olde\s?oak"]),
@@ -123,6 +127,21 @@ RULES: list[tuple[str, list[str]]] = [
                  r"hot.cross.bun", r"scone",
                  r"pains?\s+au",                       # pains au chocolat
                  r"pain.au"]),
+
+    ("cereal",  [r"granola", r"muesli", r"\bporridge\b",
+                 r"shredded.?wheat", r"\bweetabix\b", r"\bshreddies\b",
+                 r"corn.?flakes", r"bran.?flakes", r"frosties",
+                 r"wheat.?biscuit",                    # Weetabix-shape biscuits
+                 r"\bshredd\b",                        # SHREDD WHEAT abbreviated
+                 r"\bcereals?\b"]),
+
+    # Early exits: items whose ingredient names would otherwise be caught by the
+    # broad 'produce' rules below.  Must sit BEFORE the produce block.
+    ("drinks_soft", [r"\bjuice\b", r"\blemonade\b"]),  # apple/lemon → drinks, not produce
+    ("cupboard",    [r"\bsoup\b",                       # HEINZ TOMATO SOUP → cupboard not produce
+                     r"chopped.?tom",                   # tinned chopped tomatoes
+                     r"mutti\b", r"polpa",              # Italian tinned tomatoes
+                     r"mango.?chut"]),                  # before 'mango' hits produce
 
     ("produce", [r"banana", r"apple", r"onion", r"potato", r"broccoli",
                  r"mushroom", r"melon", r"cabbage", r"carrot", r"tomato",
@@ -169,7 +188,8 @@ RULES: list[tuple[str, list[str]]] = [
                  r"raisin", r"\bnuts?\b"]),
 
     ("drinks_soft", [r"juice", r"\bcola\b", r"lemonade", r"squash",
-                     r"\bwater\b", r"\btea\b", r"coffee", r"smoothie",
+                     r"(still|sparkling|mineral|spring|pure)[\s-]?water",
+                     r"\btea\b", r"coffee", r"smoothie",
                      r"starbuck", r"frappuccino", r"tropicana", r"trop\b"]),
 
     ("cupboard", [r"beans", r"baked.?beans", r"tinned", r"canned",
@@ -178,9 +198,7 @@ RULES: list[tuple[str, list[str]]] = [
                   r"branston", r"ambrosia", r"custard",
                   r"honey", r"jam\b", r"spread\b", r"marmalade",
                   r"peanut.?butter", r"marmite",
-                  r"oats?\b", r"porridge", r"muesli", r"cereal",
-                  r"corn.?flakes", r"shredd", r"wheat.?biscuit",
-                  r"sugar\b", r"flour\b",
+                  r"oats?\b", r"sugar\b", r"flour\b",
                   r"oil\b", r"olive.?oil", r"sunflower.?oil",
                   r"vinegar", r"lentil", r"black.?bean", r"chickpea",
                   r"pesto", r"cooking.?sauce", r"bbq.?sauce",
@@ -192,7 +210,6 @@ RULES: list[tuple[str, list[str]]] = [
                   r"olives?\b", r"kalamata", r"gaea\b",
                   r"chilli\b", r"chili\b",
                   r"curry\b", r"korma", r"tikka", r"keralan",
-                  r"ravioli",                   # filled pasta, caught here not pasta_rice
                   r"mushy.?peas", r"coleslaw",
                   r"scioattolo", r"girasole",   # Italian store-cupboard
                   r"\bsoup\b",                  # tinned/carton soups

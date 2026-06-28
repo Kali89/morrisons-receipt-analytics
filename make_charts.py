@@ -41,7 +41,7 @@ FREQ_PALETTE = {
 MEAL_GROUPS = {
     "Fresh & protein":      ["dairy", "milk", "meat", "fish"],
     "Fruit & veg":          ["produce"],
-    "Bread & bakery":       ["bakery"],
+    "Bread & bakery":       ["bakery", "cereal"],
     "Everyday staples":     ["pasta_rice", "cupboard"],
     "Treats & leisure":     ["snacks", "alcohol", "drinks_soft", "frozen"],
     "Household & personal": ["household"],
@@ -49,8 +49,8 @@ MEAL_GROUPS = {
 
 FREQ_GROUPS = {
     "Every shop":   ["bakery", "dairy", "produce"],              # 85–90%
-    "Most shops":   ["milk", "cupboard", "meat", "household"],   # 72–79%
-    "Sometimes":    ["snacks", "pasta_rice", "frozen"],          # 44–59%
+    "Most shops":   ["milk", "cupboard", "meat", "household"],   # 69–79%
+    "Sometimes":    ["snacks", "cereal", "pasta_rice", "frozen"],  # 38–62%
     "Occasionally": ["alcohol", "fish", "drinks_soft"],          # 21–28%
 }
 
@@ -62,6 +62,7 @@ CAT_LABELS = {
     "fish":         "Fish",
     "produce":      "Fruit & veg",
     "bakery":       "Bread & bakery",
+    "cereal":       "Cereal &\nporridge",
     "pasta_rice":   "Pasta & rice",
     "cupboard":     "Tins, sauces\n& staples",
     "snacks":       "Snacks",
@@ -286,9 +287,9 @@ ax_donut.set_title("Spend split by how often we buy it", fontsize=11, pad=12, co
 ax_freq = axes[1]
 freq_pct = {
     "bakery": 90, "produce": 90, "dairy": 85,
-    "milk": 79, "cupboard": 77, "meat": 72, "household": 72,
-    "snacks": 59, "pasta_rice": 49, "frozen": 44,
-    "alcohol": 28, "drinks_soft": 23, "fish": 21,
+    "milk": 79, "cupboard": 77, "meat": 69, "household": 72,
+    "snacks": 62, "cereal": 38, "pasta_rice": 38, "frozen": 44,
+    "alcohol": 23, "drinks_soft": 23, "fish": 21,
 }
 
 def freq_color(pct):
