@@ -55,7 +55,7 @@ fig.patch.set_facecolor("#FAFAF8")
 for ax in axes:
     ax.set_facecolor("#FAFAF8")
 
-fig.suptitle("How varied is each shop? — spend by item regularity",
+fig.suptitle("How varied is each household shop? — spend by item regularity",
              fontsize=15, fontweight="bold", y=1.01, color="#222222")
 
 # ── Top panel: stacked bar ────────────────────────────────────────────────
@@ -176,8 +176,8 @@ ax.set_ylim(-0.1, 1.45)
 ax.spines[["top","right"]].set_visible(False)
 ax.grid(alpha=0.2, linestyle="--")
 
-ax.set_title("Which items are true staples?  Frequency vs spend consistency\n"
-             "(bubble size = average spend per shop)",
+ax.set_title("Which items are household staples?  Frequency vs spend consistency\n"
+             "(bubble size = average spend per shop, 39 shops Feb–Jun 2026)",
              fontsize=13, fontweight="bold", pad=14, color="#222222")
 
 plt.tight_layout()
@@ -185,4 +185,106 @@ plt.savefig("output/chart5_item_regularity.png", dpi=150, bbox_inches="tight",
             facecolor=fig.get_facecolor())
 plt.close()
 print("Saved: output/chart5_item_regularity.png")
-print("\nAll diversity charts saved to output/")
+
+
+# ══════════════════════════════════════════════════════════════════════════
+# CHART 6 — Household milk consumption
+# ══════════════════════════════════════════════════════════════════════════
+REAL_MILK = ["M BRIT S/SKIM MILK", "M BRITISH WHOLE MILK", "LACTOFREE MILK"]
+milk = df[df["description"].isin(REAL_MILK)].copy()
+milk["pints"] = milk.apply(
+    lambda r: r["quantity"] * (4 if r["unit_price_pence"] == 165 else 3.5), axis=1
+)
+milk["type"] = milk["description"].apply(
+    lambda d: "semi-skim" if "S/SKIM" in d else ("whole" if "WHOLE" in d else "lactofree")
+)
+
+TOTAL_WEEKS = (df["date"].max() - df["date"].min()).days / 7
+pints_per_week = milk["pints"].sum() / TOTAL_WEEKS
+
+per_shop = (milk.groupby(["receipt_id", "date", "type"])["pints"]
+              .sum().reset_index()
+              .pivot_table(index=["receipt_id","date"], columns="type",
+                           values="pints", fill_value=0)
+              .reset_index().sort_values("date"))
+
+milk["month"] = milk["date"].dt.to_period("M")
+monthly = milk.groupby(["month", "type"])["pints"].sum().unstack(fill_value=0)
+
+TYPE_C = {"semi-skim": "#3498db", "whole": "#e74c3c", "lactofree": "#27ae60"}
+
+fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(14, 9),
+                                gridspec_kw={"height_ratios": [2, 1]})
+fig.patch.set_facecolor("#FAFAF8")
+for ax in [ax1, ax2]:
+    ax.set_facecolor("#FAFAF8")
+
+fig.suptitle(
+    f"Household milk consumption — {pints_per_week:.1f} pints/week  "
+    f"({milk['pints'].sum():.0f} pints total, Feb–Jun 2026)",
+    fontsize=14, fontweight="bold", y=1.01, color="#222222"
+)
+
+# Top panel: per-shop stacked bars
+x = np.arange(len(per_shop))
+dates = [pd.Timestamp(d).strftime("%-d %b") for d in per_shop["date"]]
+bottom = np.zeros(len(x))
+for t in ["semi-skim", "whole", "lactofree"]:
+    if t not in per_shop.columns:
+        continue
+    vals = per_shop[t].values
+    ax1.bar(x, vals, bottom=bottom, color=TYPE_C[t], label=t.title(),
+            edgecolor="white", linewidth=0.6, width=0.75)
+    bottom += vals
+
+totals = per_shop[[c for c in TYPE_C if c in per_shop.columns]].sum(axis=1)
+for i, total in enumerate(totals):
+    if total > 0:
+        ax1.text(i, total + 0.2, f"{total:.0f}", ha="center", va="bottom",
+                 fontsize=8.5, fontweight="bold", color="#444444")
+
+ax1.set_xticks(x)
+ax1.set_xticklabels(dates, rotation=35, ha="right", fontsize=8.5)
+ax1.set_ylabel("Pints", fontsize=11)
+ax1.spines[["top","right","left"]].set_visible(False)
+ax1.tick_params(left=False)
+ax1.grid(axis="y", alpha=0.25, linestyle="--")
+ax1.legend(loc="upper right", fontsize=10, framealpha=0)
+n_milk_shops = int((totals > 0).sum())
+ax1.set_title(
+    f"Pints bought per shop  (milk purchased in {n_milk_shops} of {n_shops} trips)",
+    fontsize=11, color="#555555", pad=6
+)
+
+# Bottom panel: monthly totals
+xm = np.arange(len(monthly))
+bot_m = np.zeros(len(xm))
+for t in ["semi-skim", "whole", "lactofree"]:
+    if t not in monthly.columns:
+        continue
+    vals = monthly[t].values
+    ax2.bar(xm, vals, bottom=bot_m, color=TYPE_C[t], label=t.title(),
+            edgecolor="white", linewidth=0.6, width=0.6)
+    bot_m += vals
+
+for i, total in enumerate(monthly.sum(axis=1)):
+    ax2.text(i, total + 0.5, f"{total:.0f} pt", ha="center", va="bottom",
+             fontsize=10, fontweight="bold", color="#333333")
+
+ax2.set_xticks(xm)
+ax2.set_xticklabels(
+    [pd.Period(str(m), freq="M").strftime("%b %Y") for m in monthly.index],
+    fontsize=10
+)
+ax2.set_ylabel("Pints/month", fontsize=10)
+ax2.spines[["top","right","left"]].set_visible(False)
+ax2.tick_params(left=False)
+ax2.grid(axis="y", alpha=0.25, linestyle="--")
+ax2.set_title("Monthly totals", fontsize=10, color="#555555", pad=6)
+
+plt.tight_layout()
+plt.savefig("output/chart6_milk.png", dpi=150, bbox_inches="tight",
+            facecolor=fig.get_facecolor())
+plt.close()
+print("Saved: output/chart6_milk.png")
+print("\nAll charts saved to output/")

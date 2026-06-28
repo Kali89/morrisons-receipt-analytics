@@ -50,10 +50,10 @@ MEAL_GROUPS = {
 }
 
 FREQ_GROUPS = {
-    "Every shop":   ["bakery", "dairy", "produce"],          # 90–95 %
-    "Most shops":   ["cupboard", "milk", "meat"],            # 76–81 %
-    "Sometimes":    ["household", "frozen", "pasta_rice"],   # 52–62 %
-    "Occasionally": ["alcohol", "fish", "snacks", "drinks_soft"],  # 24–43 %
+    "Every shop":   ["bakery", "dairy", "produce"],              # 85–90%
+    "Most shops":   ["milk", "cupboard", "meat", "household"],   # 72–79%
+    "Sometimes":    ["snacks", "pasta_rice", "frozen"],          # 44–59%
+    "Occasionally": ["alcohol", "fish", "drinks_soft"],          # 21–28%
 }
 
 # Friendly display names for individual categories
@@ -93,10 +93,10 @@ for ax in axes:
     ax.set_facecolor("#FAFAF8")
 
 fig.suptitle(
-    "Our Morrisons weekly shop — where the money goes",
+    "Household Morrisons spend — where the money goes",
     fontsize=16, fontweight="bold", y=1.01, color="#222222"
 )
-fig.text(0.5, 0.97, "Average week, Feb–May 2026  (June excluded — atypically busy month)",
+fig.text(0.5, 0.97, "Average week, Feb–May 2026  ·  £82/wk household total  (June excluded — 8 shops, atypically high)",
          ha="center", fontsize=10, color="#666666")
 
 # — Pie —
@@ -217,10 +217,10 @@ ax.grid(axis="y", alpha=0.3, linestyle="--")
 ax.set_ylim(0, monthly_grp.sum(axis=1).max() * 1.15)
 
 ax.legend(loc="upper left", fontsize=9, framealpha=0, ncol=3)
-ax.set_title("Monthly Morrisons spend by category  (Feb–Jun 2026)",
+ax.set_title("Household monthly Morrisons spend by category  (Feb–Jun 2026)",
              fontsize=14, fontweight="bold", pad=14, color="#222222")
 fig.text(0.5, -0.02,
-         "June was unusually high: 6 shops vs 2–4 in other months, including a big household restock and three wine offers",
+         "June unusually high: 8 shops combined vs 5–7 in other months, including a big household restock and several wine offers",
          ha="center", fontsize=9, color="#888888", style="italic")
 
 plt.tight_layout()
@@ -243,9 +243,9 @@ fig.patch.set_facecolor("#FAFAF8")
 for ax in axes:
     ax.set_facecolor("#FAFAF8")
 
-fig.suptitle("How often do we buy each type of thing?",
+fig.suptitle("How often does the household buy each type of thing?",
              fontsize=16, fontweight="bold", y=1.02, color="#222222")
-fig.text(0.5, 0.97, "Left: weekly spend share by purchase frequency  ·  Right: how often each category appears in a shop",
+fig.text(0.5, 0.97, "Left: weekly spend share by purchase frequency  ·  Right: how often each category appears in a shop  (39 shops)",
          ha="center", fontsize=10, color="#666666")
 
 # — Donut pie —
@@ -276,20 +276,20 @@ ax_donut.legend(handles=legend_patches, loc="lower center",
                 bbox_to_anchor=(0.5, -0.15), fontsize=9, framealpha=0, ncol=2)
 
 freq_labels_detail = {
-    "Every shop":   "90–95% of shops",
-    "Most shops":   "76–81% of shops",
-    "Sometimes":    "52–62% of shops",
-    "Occasionally": "24–43% of shops",
+    "Every shop":   "85–90% of shops",
+    "Most shops":   "72–79% of shops",
+    "Sometimes":    "44–59% of shops",
+    "Occasionally": "21–28% of shops",
 }
 ax_donut.set_title("Spend split by how often we buy it", fontsize=11, pad=12, color="#333333")
 
 # — Horizontal bar: frequency per category —
 ax_freq = axes[1]
 freq_pct = {
-    "bakery": 95, "dairy": 90, "produce": 90,
-    "cupboard": 81, "milk": 81, "meat": 76,
-    "household": 62, "frozen": 52, "pasta_rice": 52,
-    "alcohol": 43, "fish": 38, "snacks": 38, "drinks_soft": 24,
+    "bakery": 90, "produce": 90, "dairy": 85,
+    "milk": 79, "cupboard": 77, "meat": 72, "household": 72,
+    "snacks": 59, "pasta_rice": 49, "frozen": 44,
+    "alcohol": 28, "drinks_soft": 23, "fish": 21,
 }
 
 def freq_color(pct):
