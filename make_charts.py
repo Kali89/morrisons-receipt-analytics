@@ -149,16 +149,7 @@ ax_bar.grid(axis="x", alpha=0.3, linestyle="--")
 for bar, val, cat in zip(bars, vals, cat_order):
     ax_bar.text(val + 0.15, bar.get_y() + bar.get_height() / 2,
                 f"£{val:.2f}", va="center", fontsize=8.5,
-                color="#444444",
-                fontweight="bold" if cat == "dairy" else "normal")
-# Callout for dairy — the top single category
-dairy_y = cat_order.index("dairy") if "dairy" in cat_order else None
-if dairy_y is not None:
-    ax_bar.annotate("  ← #1 category",
-                    xy=(cat_pw.get("dairy", 0), dairy_y),
-                    xytext=(cat_pw.get("dairy", 0) * 0.55, dairy_y - 0.55),
-                    fontsize=8, color="#4C72B0", fontstyle="italic",
-                    arrowprops=dict(arrowstyle="-", color="#4C72B0", lw=0.8))
+                color="#444444")
 
 # Group dividers
 pos = 0

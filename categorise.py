@@ -97,7 +97,7 @@ RULES: list[tuple[str, list[str]]] = [
                  r"blk.?pud", r"ye\s?olde\s?oak"]),
 
     ("dairy",   [r"yogurt", r"yoghurt", r"\byog\b",   # YOG = yoghurt abbreviated
-                 r"cheese", r"butter", r"margarine", r"\beggs?\b",
+                 r"cheese", r"\bbutter\b", r"margarine", r"\beggs?\b",
                  r"\bcream\b", r"quiche",
                  # cheese varieties / brands
                  r"cheddar", r"mozzarella", r"mzza", r"feta", r"brie",
@@ -146,7 +146,7 @@ RULES: list[tuple[str, list[str]]] = [
 
     ("frozen",  [r"mccain", r"hash.?brown", r"pizza\b", r"goodfella",
                  r"ristorante", r"chicago.?town", r"chicage.?town",
-                 r"ice.?cr[ée]m", r"\bcones?\b", r"ice.?loll",
+                 r"ice.?cre[ae]m", r"\bcones?\b", r"ice.?loll",
                  r"carte.?d.?or", r"lollies", r"lolly",
                  r"chunky.?chips", r"straight.?cut.?chips",
                  r"haagen.?dazs", r"ice.flak"]),
