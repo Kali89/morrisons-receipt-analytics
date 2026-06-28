@@ -78,29 +78,39 @@ RULES: list[tuple[str, list[str]]] = [
                    r"durex", r"condom", r"lubricant",
                    r"paracetamol", r"ibuprofen", r"hayfever",
                    r"regina\b", r"blitz\b",    # kitchen paper brands
-                   r"\brf\s?powr\b"]),          # RF Power deodorant/body spray
+                   r"\brf\s?powr\b",            # RF Power deodorant/body spray
+                   r"shampoo", r"conditioner", r"tresemme",
+                   r"\bcandle\b", r"tampon",
+                   r"refuse.?sack",
+                   r"greeting.?card"]),
 
     ("fish",    [r"tuna", r"salmon", r"\bcod\b", r"haddock", r"prawn",
                  r"\bfish\b", r"mackerel", r"sardine", r"\bsea\s?bass\b",
                  r"scampi", r"seafood", r"f/finger", r"fish.?finger",
                  r"whitefish"]),
 
-    ("meat",    [r"chicken", r"\bbeef\b", r"\bpork\b", r"\bham\b", r"bacon",
+    ("meat",    [r"chicken", r"\bchk\b",   # CHK = chicken (Morrisons abbreviation)
+                 r"\bbeef\b", r"\bpork\b", r"\bham\b", r"bacon",
                  r"sausage", r"\bmince\b", r"steak", r"kidney", r"\blamb\b",
                  r"turkey", r"gammon", r"chorizo", r"salami", r"pepperoni",
                  r"meatball", r"\bpie\b", r"hot.?dog", r"black.?pud",
                  r"blk.?pud", r"ye\s?olde\s?oak"]),
 
-    ("dairy",   [r"yogurt", r"yoghurt", r"cheese", r"butter", r"\beggs?\b",
+    ("dairy",   [r"yogurt", r"yoghurt", r"\byog\b",   # YOG = yoghurt abbreviated
+                 r"cheese", r"butter", r"margarine", r"\beggs?\b",
                  r"\bcream\b", r"quiche",
                  # cheese varieties / brands
                  r"cheddar", r"mozzarella", r"mzza", r"feta", r"brie",
                  r"stilton", r"gouda", r"edam", r"pecorino", r"parmesan",
-                 r"parmigiano", r"grana\s?padano", r"ricotta", r"halloumi",
+                 r"parmigiano", r"reggiano",          # Parmigiano Reggiano
+                 r"grana\s?padano", r"ricotta", r"halloumi",
+                 r"leicester",                         # Red Leicester
                  r"cathedral", r"pilgrims?\s?choice", r"pilg/choice",
                  r"seriously\s?spreadable", r"philadelphia",
                  r"galbani", r"kerrygold", r"elmlea", r"spreadable",
                  r"tzatziki", r"cheesy.?slice",
+                 r"yeo.?val",                          # Yeo Valley yogurts
+                 r"red.?fox",                          # Red Fox Red Leicester
                  # drinks
                  r"\bfrijj\b", r"benecol", r"cholesterol.?drink"]),
 
@@ -109,7 +119,10 @@ RULES: list[tuple[str, list[str]]] = [
                  r"pitta", r"\bbap\b", r"\bbaps\b", r"bloomer", r"loaf",
                  r"split.?tin", r"coburg", r"malties", r"farmhouse",
                  r"hovis\b", r"\bwraps?\b", r"tortilla", r"mission\b",
-                 r"deli\s?kitchen", r"sub.?roll", r"\bsub\b"]),
+                 r"deli\s?kitchen", r"sub.?roll", r"\bsub\b",
+                 r"hot.cross.bun", r"scone",
+                 r"pains?\s+au",                       # pains au chocolat
+                 r"pain.au"]),
 
     ("produce", [r"banana", r"apple", r"onion", r"potato", r"broccoli",
                  r"mushroom", r"melon", r"cabbage", r"carrot", r"tomato",
@@ -121,24 +134,39 @@ RULES: list[tuple[str, list[str]]] = [
                  r"baby.?corn", r"sweetcorn", r"sweetclem", r"clementine",
                  r"satsuma", r"courgette", r"parsnip", r"broccoli",
                  r"cauliflower", r"garlic", r"ginger", r"\bherb\b", r"basil",
-                 r"chive", r"coriander"]),
+                 r"chive", r"coriander",
+                 r"\bpears?\b", r"\bkiwi\b",
+                 r"exotic.fruit", r"garden.peas"]),
 
-    ("pasta_rice", [r"pasta", r"rigatoni", r"manfredine", r"spaghetti",
-                    r"penne", r"\brice\b", r"noodle", r"lasagne", r"lasgane",
-                    r"macaroni", r"fusilli", r"tortell", r"cous.?cous",
-                    r"orzo", r"gnocchi"]),
+    ("pasta_rice", [r"pasta", r"rigatoni", r"tortiglioni", r"manfredine",
+                    r"spaghetti", r"penne", r"\brice\b", r"noodle",
+                    r"lasagne", r"lasgane", r"macaroni", r"fusilli",
+                    r"tortell", r"cous.?cous", r"orzo", r"gnocchi",
+                    r"barilla"]),
 
     ("frozen",  [r"mccain", r"hash.?brown", r"pizza\b", r"goodfella",
                  r"ristorante", r"chicago.?town", r"chicage.?town",
                  r"ice.?cr[ée]m", r"\bcones?\b", r"ice.?loll",
                  r"carte.?d.?or", r"lollies", r"lolly",
-                 r"chunky.?chips", r"straight.?cut.?chips"]),
+                 r"chunky.?chips", r"straight.?cut.?chips",
+                 r"haagen.?dazs", r"ice.flak"]),
 
     ("snacks",  [r"doritos", r"belvita", r"mcvitie", r"wispa", r"\bcrisp",
                  r"nachip", r"nachos", r"popcorn", r"pretzel",
                  r"chocolate.?bar", r"choc.?bar", r"flapjack",
                  r"bourbon\b", r"choco.?hoop", r"choco.?nut",
-                 r"churros", r"\bdips?\b"]),
+                 r"churros", r"\bdips?\b",
+                 # chocolate / confectionery brands
+                 r"cadbury", r"haribo", r"terrys?",
+                 r"double.?decker", r"\btwirl\b",
+                 r"\bjelly\b", r"jelly.babies?",
+                 # biscuits / crisps brands
+                 r"pringles", r"\bwalkers\b", r"hula.?hoops?",
+                 r"hobnob", r"\bdigestive",
+                 r"\bcookie", r"\bmaryland\b", r"maynard",
+                 r"party.ring", r"\blotus\b", r"\bkipling\b", r"bakewell",
+                 # snack packs / nuts / raisins
+                 r"raisin", r"\bnuts?\b"]),
 
     ("drinks_soft", [r"juice", r"\bcola\b", r"lemonade", r"squash",
                      r"\bwater\b", r"\btea\b", r"coffee", r"smoothie",
@@ -166,7 +194,13 @@ RULES: list[tuple[str, list[str]]] = [
                   r"curry\b", r"korma", r"tikka", r"keralan",
                   r"ravioli",                   # filled pasta, caught here not pasta_rice
                   r"mushy.?peas", r"coleslaw",
-                  r"scioattolo", r"girasole"]),  # Italian store-cupboard
+                  r"scioattolo", r"girasole",   # Italian store-cupboard
+                  r"\bsoup\b",                  # tinned/carton soups
+                  r"mayonnaise", r"mayo\b",
+                  r"conserve\b",                # jams/conserves
+                  r"\bcinnamon\b", r"turmeric", r"corinader",  # spices (incl. Morrisons typo)
+                  r"\bschwartz\b",              # spice brand
+                  r"cake.decor"]),              # baking decorations
 ]
 
 UNCLASSIFIED = "unclassified"

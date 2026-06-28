@@ -76,11 +76,22 @@ def _reconcile(receipt_details: dict[str, Any], item_rows: list[dict]) -> Reconc
     if subtotal is not None and gross_sum != subtotal:
         msgs.append(f"gross sum {gross_sum} != subtotal {subtotal} (diff {gross_sum - subtotal})")
 
-    # Check 2: item-level discounts sum to store + More Card savings.
-    # Real receipts show More Card rewards ARE in each item's rewards list (the parser
-    # sums them all regardless of rewardType), so we compare against the combined total.
+    # Check 2: item-level discounts account for all savings.
+    # Two known-good scenarios:
+    #   a) All savings (store + More Card) are in per-item rewards → sum matches combined total.
+    #   b) Store savings are per-item but More Card savings are a receipt-level voucher
+    #      (e.g. "£5 off £50") — the API puts those in moreCardSavings.total only, not
+    #      in any item's rewards list.  This is expected; we note it rather than fail.
     combined_savings = store_savings + morecard_savings
-    if discount_sum != combined_savings:
+    if discount_sum == combined_savings:
+        pass  # perfect: all savings accounted for per-item
+    elif discount_sum == store_savings and morecard_savings > 0:
+        # Receipt-level More Card voucher not apportioned to lines.
+        # net_pence overstates actual spend by morecard_savings across this receipt.
+        msgs.append(f"NOTE: More Card receipt-level discount {morecard_savings}p "
+                    f"not in line-item rewards (spend-threshold voucher like '£5 off £50'); "
+                    f"net_pence overstated by this amount for this receipt")
+    else:
         msgs.append(f"item discounts {discount_sum} != storeSavings+moreCardSavings "
                     f"{combined_savings} (diff {discount_sum - combined_savings})")
 
@@ -93,7 +104,8 @@ def _reconcile(receipt_details: dict[str, Any], item_rows: list[dict]) -> Reconc
     if coupon_savings:
         msgs.append(f"NOTE: receipt has coupon/stamp discounts not attributed to line items")
 
-    return Reconciliation(ok=len(msgs) == 0, messages=msgs)
+    errors = [m for m in msgs if not m.startswith("NOTE:")]
+    return Reconciliation(ok=len(errors) == 0, messages=msgs)
 
 
 # ---------------------------------------------------------------------------

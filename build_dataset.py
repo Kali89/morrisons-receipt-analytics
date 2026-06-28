@@ -87,7 +87,11 @@ def build(
                                       date=date_from_receipt_id(receipt_id))
             df["account"] = acct_name
             if not recon.ok:
-                problems.append((acct_name, receipt_id, recon.messages))
+                errors = [m for m in recon.messages if not m.startswith("NOTE:")]
+                problems.append((acct_name, receipt_id, errors))
+            notes = [m for m in recon.messages if m.startswith("NOTE:")]
+            for note in notes:
+                print(f"  [{acct_name}] {receipt_id}: {note}")
             frames.append(df)
 
     if not frames:
